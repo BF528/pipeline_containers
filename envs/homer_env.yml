@@ -1,0 +1,6 @@
+channels:
+- conda-forge
+- bioconda
+
+dependencies:
+- homer=4.11
