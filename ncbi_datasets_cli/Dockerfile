@@ -7,7 +7,7 @@ RUN micromamba install -y -n base -f /ncbidatasetscli_env.yml && micromamba clea
 USER root
 
 # required for nextflow trace
-RUN apt-get update && apt-get install -y procps && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y procps unzip && rm -rf /var/lib/apt/lists/*
 
 USER $MAMBA_USER
 
