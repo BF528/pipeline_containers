@@ -3,4 +3,4 @@ channels:
 - bioconda
 
 dependencies:
-- ncbi-datasets-cli=16.30.1
+- kmer-jellyfish

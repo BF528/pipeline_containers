@@ -1,6 +1,6 @@
 channels:
-- conda-forge
-- bioconda
+  - conda-forge
+  - bioconda
 
 dependencies:
-- trimmomatic=0.39
+  - trimmomatic

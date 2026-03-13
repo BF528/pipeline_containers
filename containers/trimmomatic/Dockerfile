@@ -1,8 +1,8 @@
 FROM mambaorg/micromamba:latest
 
-COPY --chown=$MAMBA_USER:$MAMBA_USER trimmomatic_env.yml /trimmomatic_env.yml
+COPY --chown=$MAMBA_USER:$MAMBA_USER conda-lock.yml /conda-lock.yml
 
-RUN micromamba install -y -n base -f /trimmomatic_env.yml && micromamba clean --all --yes
+RUN micromamba install -y -n base --freeze-installed -f /conda-lock.yml && micromamba clean --all --yes
 
 USER root
 
@@ -11,5 +11,5 @@ RUN apt-get update && apt-get install -y procps && rm -rf /var/lib/apt/lists/*
 
 USER $MAMBA_USER
 
-# just exec things causing problems, not a great fix
+# required for nextflow singularity exec compatibility
 ENV PATH "$MAMBA_ROOT_PREFIX/bin:$PATH"
