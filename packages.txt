@@ -1,0 +1,15 @@
+multiqc
+homer
+macs3
+verse
+samtools
+star
+bedtools
+bowtie2
+biopython
+deeptools
+prokka
+ncbi-datasets-cli
+fastqc
+pandas
+trimmomatic

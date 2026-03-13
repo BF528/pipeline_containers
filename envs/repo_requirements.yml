@@ -1,6 +1,7 @@
+name: pipeline_repo_env
 channels:
 - conda-forge
 - bioconda
 
 dependencies:
-- ncbi-datasets-cli=16.30.1
+- conda-lock
