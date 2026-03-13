@@ -68,7 +68,7 @@ jobs:
           echo "test={\"dockerfile\":\"${{ matrix.dir }}/Dockerfile\", \"context\":\"${{ matrix.dir }}\", \"image\":\"${{ env.REGISTRY }}/bf528/${{ matrix.dir }}:latest\"}" >> "$GITHUB_OUTPUT"
 
       - name: Login to registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
