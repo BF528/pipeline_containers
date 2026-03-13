@@ -1,6 +1,6 @@
 channels:
-- conda-forge
-- bioconda
+  - conda-forge
+  - bioconda
 
 dependencies:
-- pandas=2.2.3
+  - pandas
