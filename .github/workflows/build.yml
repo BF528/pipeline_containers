@@ -1,0 +1,86 @@
+name: Build and publish Docker image to github registry if changed
+
+on:
+  push:
+    paths-ignore:
+      - '**/build.yml'
+      - '**/README.md'
+      - '**/*.py'
+      - '**/*.txt'
+    branches: ['main']
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  find-out-changed:
+    runs-on: ubuntu-latest
+    outputs:
+      changed_directories: ${{ steps.set-output.outputs.changed_directories }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get changed directories via git diff
+        id: set-output
+        run: |
+          # Diff current commit against previous, get unique top-level dirs of changed files
+          DIRS=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} \
+            | grep -v '^\.github/workflows/build\.yml' \
+            | grep -v '^envs/' \
+            | xargs -I{} dirname {} \
+            | grep -v '^\.$' \
+            | cut -d'/' -f1 \
+            | sort -u \
+            | jq -R '.' \
+            | jq -sc '.')
+
+          if [ -z "$DIRS" ] || [ "$DIRS" = "[]" ]; then
+            echo "changed_directories=" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed_directories={\"dir\":$DIRS}" >> "$GITHUB_OUTPUT"
+          fi
+
+  build-push-changed:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
+
+    needs: find-out-changed
+    if: ${{ needs.find-out-changed.outputs.changed_directories != '' }}
+    strategy:
+      max-parallel: 4
+      matrix: ${{ fromJson(needs.find-out-changed.outputs.changed_directories) }}
+      fail-fast: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build matrix variables
+        id: changes-matrix
+        run: |
+          echo "test={\"dockerfile\":\"${{ matrix.dir }}/Dockerfile\", \"context\":\"${{ matrix.dir }}\", \"image\":\"${{ env.REGISTRY }}/bf528/${{ matrix.dir }}:latest\"}" >> "$GITHUB_OUTPUT"
+
+      - name: Login to registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        id: push
+        uses: docker/build-push-action@v6
+        with:
+          context: ./${{ fromJSON(steps.changes-matrix.outputs.test).context }}
+          file: ${{ fromJSON(steps.changes-matrix.outputs.test).dockerfile }}
+          push: true
+          tags: |
+            ${{ fromJSON(steps.changes-matrix.outputs.test).image }}
+            ${{ env.REGISTRY }}/bf528/${{ matrix.dir }}:${{ github.sha }}
