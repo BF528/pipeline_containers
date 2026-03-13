@@ -1,5 +1,31 @@
 # Monorepo for Docker containers used in BF528 - Applications in Translational Bioinformatics
 
+<!-- versions-table-start -->
+## Available Tools
+
+| Tool | Version |
+| ---- | ------- |
+| `bedtools` | 2.31.1 |
+| `biopython` | 1.86 |
+| `bowtie2` | 2.5.5 |
+| `deeptools` | 3.5.6 |
+| `fastqc` | 0.12.1 |
+| `homer` | 5.1 |
+| `jbrowse2` | 4.1.3 |
+| `kmer-jellyfish` | 2.3.1 |
+| `macs3` | 3.0.4 |
+| `multiqc` | 1.33 |
+| `ncbi-datasets-cli` | 18.20.0 |
+| `pandas` | 3.0.1 |
+| `prokka` | 1.15.6 |
+| `pysam` | 0.23.3 |
+| `samtools` | 1.23 |
+| `star` | 2.7.11b |
+| `subread` | 2.1.1 |
+| `trimmomatic` | 0.40 |
+| `verse` | 0.1.5 |
+<!-- versions-table-end -->
+
 ## Overview
 
 This repo contains all of the containers and their specifications required for use in BF528.
@@ -69,6 +95,7 @@ mamba install -f envs/repo_requirements.yml
 - [x] `generate_envs.py` to scaffold env YMLs from `packages.txt`
 - [x] `generate_directory.py` generates tool directories, Dockerfiles, and lockfiles
 - [x] `generate_directory.py` skips existing tools by default, supports `--overwrite` and `--tools`
+- [x] `get_versions.py` extracts resolved tool versions from lockfiles and optionally updates the README
 - [x] `repo_requirements.yml` for local dev environment setup
 
 ---
@@ -156,6 +183,38 @@ The filename must match the exact conda package name: `<package-name>_env.yml`. 
 `kmer-jellyfish_env.yml` for the `kmer-jellyfish` package.
 
 ---
+
+## Checking Tool Versions
+
+To see the resolved version of every tool across all lockfiles:
+
+```bash
+python get_versions.py
+```
+
+To insert or update a version table at the top of the README:
+
+```bash
+python get_versions.py --update-readme
+```
+
+The table is wrapped in HTML comment markers so subsequent runs replace it cleanly
+without affecting any surrounding content. The markers are invisible in rendered Markdown.
+
+To report versions for specific tools only:
+
+```bash
+python get_versions.py --tools samtools biopython
+```
+
+All flags and their defaults:
+
+```
+--containers-dir   Directory containing per-tool subdirectories   (default: containers/)
+--readme           Path to the README to update                   (default: README.md)
+--tools            Only report versions for the specified tools
+--update-readme    Insert or update the version table in the README
+```
 
 ## Dockerfile
 
