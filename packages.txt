@@ -13,3 +13,5 @@ ncbi-datasets-cli
 fastqc
 pandas
 trimmomatic
+pysam
+subread
