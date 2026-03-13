@@ -9,8 +9,13 @@ containers directory containing:
   - A rendered Dockerfile from the template file
   - A conda-lock.yml lockfile for reproducible builds
 
+Existing tool directories are skipped by default. Use --overwrite to regenerate
+all, or --tools to target specific tools regardless of whether they already exist.
+
 Usage:
     python generate_directory.py
+    python generate_directory.py --overwrite
+    python generate_directory.py --tools samtools biopython
     python generate_directory.py --envs-dir envs --containers-dir containers --template template.txt
 """
 
@@ -66,6 +71,27 @@ def scaffold_tool(env_path: str, containers_dir: str, template_file: str) -> Non
     generate_lockfile(tool_dir, dest_env_path)
 
 
+def should_scaffold(tool: str, tool_dir: str, overwrite: bool, targets: list[str]) -> tuple[bool, str]:
+    """Determine whether a tool should be scaffolded and why.
+
+    Returns a (should_run, reason) tuple.
+    """
+    already_exists = os.path.isdir(tool_dir)
+
+    if targets:
+        if tool not in targets:
+            return False, "not in --tools list, skipping"
+        return True, "targeted via --tools"
+
+    if already_exists and not overwrite:
+        return False, "already exists, skipping (use --overwrite to regenerate)"
+
+    if already_exists and overwrite:
+        return True, "regenerating (--overwrite)"
+
+    return True, "new"
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Scaffold per-tool container directories from env YMLs."
@@ -85,6 +111,17 @@ def parse_args() -> argparse.Namespace:
         default="template.txt",
         help="Path to the Dockerfile template (default: template.txt)",
     )
+    parser.add_argument(
+        "--overwrite",
+        action="store_true",
+        help="Regenerate all tool directories, including existing ones",
+    )
+    parser.add_argument(
+        "--tools",
+        nargs="+",
+        metavar="TOOL",
+        help="Only scaffold the specified tools, skipping all others",
+    )
     return parser.parse_args()
 
 
@@ -99,9 +136,16 @@ def main() -> None:
 
     for env_path in sorted(env_paths):
         tool = get_tool_name(env_path)
-        print(f"Scaffolding {tool}...")
+        tool_dir = os.path.join(args.containers_dir, tool)
+        run, reason = should_scaffold(tool, tool_dir, args.overwrite, args.tools or [])
+
+        if not run:
+            print(f"  {tool}: {reason}")
+            continue
+
+        print(f"Scaffolding {tool} ({reason})...")
         scaffold_tool(env_path, args.containers_dir, args.template)
-        print(f"  done -> {os.path.join(args.containers_dir, tool)}/")
+        print(f"  done -> {tool_dir}/")
 
 
 if __name__ == "__main__":
