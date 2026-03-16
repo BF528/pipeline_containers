@@ -16,3 +16,4 @@ trimmomatic
 pysam
 subread
 bedops
+trinity
