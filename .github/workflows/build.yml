@@ -8,6 +8,11 @@ on:
       - '**/*.py'
       - '**/*.txt'
     branches: ['main']
+  workflow_dispatch:
+    inputs:
+      tools:
+        description: 'Space-separated list of tools to build (leave blank for all)'
+        required: false
 
 env:
   REGISTRY: ghcr.io
@@ -26,14 +31,22 @@ jobs:
       - name: Get changed directories via git diff
         id: set-output
         run: |
-          # Diff current commit against previous, get unique tool dirs under containers/
-          DIRS=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} \
-            | grep '^containers/' \
-            | xargs -I{} dirname {} \
-            | cut -d'/' -f2 \
-            | sort -u \
-            | jq -R '.' \
-            | jq -sc '.')
+          # On workflow_dispatch, use tools input or build all containers/
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            if [ -n "${{ github.event.inputs.tools }}" ]; then
+              DIRS=$(echo "${{ github.event.inputs.tools }}" | tr ' ' '\n' | jq -R '.' | jq -sc '.')
+            else
+              DIRS=$(find containers/ -mindepth 1 -maxdepth 1 -type d | cut -d'/' -f2 | sort -u | jq -R '.' | jq -sc '.')
+            fi
+          else
+            DIRS=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} \
+              | grep '^containers/' \
+              | xargs -I{} dirname {} \
+              | cut -d'/' -f2 \
+              | sort -u \
+              | jq -R '.' \
+              | jq -sc '.')
+          fi
 
           if [ -z "$DIRS" ] || [ "$DIRS" = "[]" ]; then
             echo "changed_directories=" >> "$GITHUB_OUTPUT"
