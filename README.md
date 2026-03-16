@@ -27,6 +27,7 @@
 | `star` | 2.7.11b |
 | `subread` | 2.1.1 |
 | `trimmomatic` | 0.40 |
+| `trinity` | 2.15.2 |
 | `verse` | 0.1.5 |
 <!-- versions-table-end -->
 
