@@ -1,0 +1,79 @@
+name: Update conda lockfiles
+
+on:
+  schedule:
+    - cron: '0 9 1 8 *'  # August 1st at 9am
+  workflow_dispatch:
+    inputs:
+      tool:
+        description: 'Tool directory to update (leave blank for all)'
+        required: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-lockfiles:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install conda-lock
+        run: pip install conda-lock
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.conda/pkgs
+          key: conda-lock-${{ hashFiles('**/env.yml') }}
+
+      - name: Regenerate lockfiles
+        run: |
+          FAILED=""
+          SUCCEEDED=""
+
+          if [ -n "${{ github.event.inputs.tool }}" ]; then
+            DIRS="containers/${{ github.event.inputs.tool }}"
+          else
+            DIRS=$(find containers/ -name "conda-lock.yml" | xargs -I{} dirname {} | sort -u)
+          fi
+
+          for DIR in $DIRS; do
+            ENV=$(find $DIR -name "*_env.yml" | head -1)
+            if conda-lock lock \
+              --file $ENV \
+              --platform linux-64 \
+              --micromamba \
+              --lockfile $DIR/conda-lock.yml; then
+              SUCCEEDED="$SUCCEEDED\n- $DIR"
+            else
+              FAILED="$FAILED\n- $DIR"
+            fi
+          done
+
+          echo "FAILED=$FAILED" >> "$GITHUB_ENV"
+          echo "SUCCEEDED=$SUCCEEDED" >> "$GITHUB_ENV"
+
+          [ -z "$SUCCEEDED" ] && exit 1 || exit 0
+
+      - name: Open PR if changed
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git diff --quiet && echo "No changes, skipping PR" || (
+            git checkout -b update/conda-lockfiles-$(date +%Y%m%d)
+            git add '**/conda-lock.yml'
+            git commit -m "chore: update conda lockfiles $(date +%Y-%m-%d)"
+            git push origin HEAD
+            gh pr create \
+              --title "Update conda lockfiles $(date +%Y-%m-%d)" \
+              --body "## Lockfile Update Summary
+
+          ### Succeeded
+          ${{ env.SUCCEEDED }}
+
+          ### Failed
+          ${{ env.FAILED }}"
+          )
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
