@@ -1,14 +1,14 @@
 # Monorepo for Docker containers used in BF528 - Applications in Translational Bioinformatics
 
-![Build](https://github.com/bf528/pipeline_containers/actions/workflows/build.yml/badge.svg?branch=main)
-![Update Lockfiles](https://github.com/bf528/pipeline_containers/actions/workflows/update_lockfiles.yml/badge.svg?branch=main)
-
+![Build](https://github.com/bf528/<repo>/actions/workflows/build.yml/badge.svg?branch=main)
+![Update Lockfiles](https://github.com/bf528/<repo>/actions/workflows/update_lockfiles.yml/badge.svg?branch=main)
 
 <!-- versions-table-start -->
 ## Available Tools
 
 | Tool | Version |
 | ---- | ------- |
+| `bedops` | 2.4.42 |
 | `bedtools` | 2.31.1 |
 | `biopython` | 1.86 |
 | `bowtie2` | 2.5.5 |

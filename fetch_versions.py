@@ -5,7 +5,15 @@ get_versions.py - Extract the primary tool version from each conda-lock lockfile
 
 For each lockfile found under the containers directory, reads the resolved version
 of the tool package (inferred from the directory name) and prints a summary table.
-Optionally inserts or updates the table at the top of the README.
+Optionally updates the version table in the README between pre-existing comment markers.
+
+The README must contain the following markers for --update-readme to work:
+
+    <!-- versions-table-start -->
+    <!-- versions-table-end -->
+
+Place these markers wherever you want the table to appear. The script will replace
+everything between them on each run.
 
 Usage:
     python get_versions.py
@@ -18,6 +26,7 @@ import argparse
 import glob
 import os
 import re
+import sys
 import yaml
 
 
@@ -63,32 +72,32 @@ def build_markdown_table(results: dict[str, str]) -> str:
 
 
 def update_readme(readme_path: str, table: str) -> None:
-    """Insert or replace the version table in the README.
+    """Replace the version table in the README between the pre-existing markers.
 
-    The table is wrapped in HTML comments used as stable markers so it can
-    be safely replaced on subsequent runs without affecting surrounding content.
+    Exits with an error if the markers are not found — the README must be
+    manually updated to include them before using --update-readme.
     """
     with open(readme_path, "rt") as f:
         content = f.read()
 
+    if README_TABLE_START not in content or README_TABLE_END not in content:
+        print(
+            f"Error: markers not found in {readme_path}.\n"
+            f"Add the following markers where you want the table to appear:\n\n"
+            f"  {README_TABLE_START}\n"
+            f"  {README_TABLE_END}",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
     block = f"{README_TABLE_START}\n{table}\n{README_TABLE_END}"
 
-    if README_TABLE_START in content:
-        content = re.sub(
-            rf"{re.escape(README_TABLE_START)}.*?{re.escape(README_TABLE_END)}",
-            block,
-            content,
-            flags=re.DOTALL,
-        )
-    else:
-        # Insert after the top-level heading
-        content = re.sub(
-            r"(^# .+\n)",
-            rf"\1\n{block}\n",
-            content,
-            count=1,
-            flags=re.MULTILINE,
-        )
+    content = re.sub(
+        rf"{re.escape(README_TABLE_START)}.*?{re.escape(README_TABLE_END)}",
+        block,
+        content,
+        flags=re.DOTALL,
+    )
 
     with open(readme_path, "wt") as f:
         f.write(content)
@@ -114,7 +123,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--update-readme",
         action="store_true",
-        help="Insert or update the version table in the README",
+        help="Update the version table in the README between the comment markers",
     )
     parser.add_argument(
         "--readme",
@@ -156,8 +165,8 @@ def main() -> None:
 
     if args.update_readme:
         if not os.path.exists(args.readme):
-            print(f"README not found: {args.readme}")
-            return
+            print(f"README not found: {args.readme}", file=sys.stderr)
+            sys.exit(1)
         table = build_markdown_table(results)
         update_readme(args.readme, table)
 
