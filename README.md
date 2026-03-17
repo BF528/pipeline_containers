@@ -100,7 +100,7 @@ mamba install -f envs/repo_requirements.yml
 - [x] `generate_envs.py` to scaffold env YMLs from `packages.txt`
 - [x] `generate_directory.py` generates tool directories, Dockerfiles, and lockfiles
 - [x] `generate_directory.py` skips existing tools by default, supports `--overwrite` and `--tools`
-- [x] `get_versions.py` extracts resolved tool versions from lockfiles and optionally updates the README
+- [x] `fetch_versions.py` extracts resolved tool versions from lockfiles and optionally updates the README
 - [x] `repo_requirements.yml` for local dev environment setup
 
 ---
@@ -194,13 +194,13 @@ The filename must match the exact conda package name: `<package-name>_env.yml`. 
 To see the resolved version of every tool across all lockfiles:
 
 ```bash
-python get_versions.py
+python fetch_versions.py
 ```
 
 To insert or update a version table at the top of the README:
 
 ```bash
-python get_versions.py --update-readme
+python fetch_versions.py --update-readme
 ```
 
 The table is wrapped in HTML comment markers so subsequent runs replace it cleanly
@@ -209,7 +209,7 @@ without affecting any surrounding content. The markers are invisible in rendered
 To report versions for specific tools only:
 
 ```bash
-python get_versions.py --tools samtools biopython
+python fetch_versions.py --tools samtools biopython
 ```
 
 All flags and their defaults:
