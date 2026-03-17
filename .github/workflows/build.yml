@@ -95,3 +95,14 @@ jobs:
           tags: |
             ${{ fromJSON(steps.changes-matrix.outputs.test).image }}
             ${{ env.REGISTRY }}/bf528/${{ matrix.dir }}:${{ github.sha }}
+
+      - name: Test container
+        run: |
+          TESTS_FILE="containers/${{ matrix.dir }}/tests.yml"
+          if [ ! -f "$TESTS_FILE" ]; then
+            echo "No tests.yml found for ${{ matrix.dir }}, skipping"
+            exit 0
+          fi
+          CMD=$(python3 -c "import yaml; print(yaml.safe_load(open('$TESTS_FILE'))['command'])")
+          echo "Running: $CMD"
+          docker run --rm ${{ fromJSON(steps.changes-matrix.outputs.test).image }} $CMD
