@@ -4,6 +4,31 @@
 ![Update Lockfiles](https://github.com/bf528/pipeline_containers/actions/workflows/update_lockfiles.yml/badge.svg?branch=main)
 
 <!-- versions-table-start -->
+## Available Tools
+
+| Tool | Version |
+| ---- | ------- |
+| `bedops` | 2.4.42 |
+| `bedtools` | 2.31.1 |
+| `biopython` | 1.86 |
+| `bowtie2` | 2.5.5 |
+| `deeptools` | 3.5.6 |
+| `fastqc` | 0.12.1 |
+| `homer` | 5.1 |
+| `jbrowse2` | 4.1.3 |
+| `kmer-jellyfish` | 2.3.1 |
+| `macs3` | 3.0.4 |
+| `multiqc` | 1.33 |
+| `ncbi-datasets-cli` | 18.20.0 |
+| `pandas` | 3.0.1 |
+| `prokka` | 1.15.6 |
+| `pysam` | 0.23.3 |
+| `samtools` | 1.23 |
+| `star` | 2.7.11b |
+| `subread` | 2.1.1 |
+| `trimmomatic` | 0.40 |
+| `trinity` | 2.15.2 |
+| `verse` | 0.1.5 |
 <!-- versions-table-end -->
 
 ## Overview
