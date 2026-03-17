@@ -1,0 +1,11 @@
+# tests.yml - Smoke test configuration for pysam
+#
+# The command is run inside the built container after a successful push.
+# It should exit 0 if the tool is working correctly.
+#
+# Examples:
+#   command: samtools --version
+#   command: python -c "import biopython"
+#   command: bash -c "bowtie2 --version && echo ok"
+
+command: python -c "import pysam"
