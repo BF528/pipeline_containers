@@ -4,31 +4,6 @@
 ![Update Lockfiles](https://github.com/bf528/pipeline_containers/actions/workflows/update_lockfiles.yml/badge.svg?branch=main)
 
 <!-- versions-table-start -->
-## Available Tools
-
-| Tool | Version |
-| ---- | ------- |
-| `bedops` | 2.4.42 |
-| `bedtools` | 2.31.1 |
-| `biopython` | 1.86 |
-| `bowtie2` | 2.5.5 |
-| `deeptools` | 3.5.6 |
-| `fastqc` | 0.12.1 |
-| `homer` | 5.1 |
-| `jbrowse2` | 4.1.3 |
-| `kmer-jellyfish` | 2.3.1 |
-| `macs3` | 3.0.4 |
-| `multiqc` | 1.33 |
-| `ncbi-datasets-cli` | 18.20.0 |
-| `pandas` | 3.0.1 |
-| `prokka` | 1.15.6 |
-| `pysam` | 0.23.3 |
-| `samtools` | 1.23 |
-| `star` | 2.7.11b |
-| `subread` | 2.1.1 |
-| `trimmomatic` | 0.40 |
-| `trinity` | 2.15.2 |
-| `verse` | 0.1.5 |
 <!-- versions-table-end -->
 
 ## Overview
@@ -54,14 +29,16 @@ docker pull ghcr.io/bf528/<tool>:latest
 │   └── <tool>/
 │       ├── <tool>_env.yml
 │       ├── conda-lock.yml       # Fully resolved lockfile for reproducible builds
-│       └── Dockerfile
+│       ├── Dockerfile
+│       └── tests.yml            # Smoke test command run after build
 ├── envs/                        # Source environment specifications (one per tool)
 │   ├── <tool>_env.yml
 │   └── repo_requirements.yml    # Local dev dependencies
 ├── template.txt                 # Dockerfile template used by generate_directory.py
 ├── packages.txt                 # Canonical list of all tools in the repo
 ├── generate_envs.py             # Generates env YMLs from packages.txt
-└── generate_directory.py        # Scaffolds per-tool directories from envs/
+├── generate_directory.py        # Scaffolds per-tool directories from envs/
+└── tests_template.yml           # Template for per-tool smoke test configs
 ```
 
 ---
@@ -100,6 +77,8 @@ mamba install -f envs/repo_requirements.yml
 - [x] `generate_envs.py` to scaffold env YMLs from `packages.txt`
 - [x] `generate_directory.py` generates tool directories, Dockerfiles, and lockfiles
 - [x] `generate_directory.py` skips existing tools by default, supports `--overwrite` and `--tools`
+- [x] `tests_template.yml` scaffolds per-tool smoke test configs
+- [x] Container smoke tests run automatically after each build
 - [x] `fetch_versions.py` extracts resolved tool versions from lockfiles and optionally updates the README
 - [x] `repo_requirements.yml` for local dev environment setup
 
@@ -307,6 +286,36 @@ what changed and what failed. Failed tools retain their existing lockfile — th
 continue to build against the last known good state until the issue is resolved manually.
 
 Merging the PR triggers `build.yml` automatically, rebuilding only the affected images.
+
+---
+
+## Container Testing
+
+Each tool directory contains a `tests.yml` specifying a smoke test command run inside
+the container after a successful build and push:
+
+```yaml
+command: samtools --version
+```
+
+If the command exits non-zero the workflow fails, catching broken installs before
+students encounter them. If no `tests.yml` is present the test step is skipped.
+
+The test command should be the simplest possible invocation that confirms the tool
+is installed and on `PATH`. For Python packages, use:
+
+```yaml
+command: python -c "import biopython"
+```
+
+For tools with non-standard version flags:
+
+```yaml
+command: bash -c "bowtie2 --version && echo ok"
+```
+
+`tests.yml` is never overwritten by `generate_directory.py` once created, so manual
+edits are safe.
 
 ---
 

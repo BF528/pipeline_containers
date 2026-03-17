@@ -8,6 +8,7 @@ containers directory containing:
   - The env YML
   - A rendered Dockerfile from the template file
   - A conda-lock.yml lockfile for reproducible builds
+  - A tests.yml smoke test config rendered from tests_template.yml
 
 Existing tool directories are skipped by default. Use --overwrite to regenerate
 all, or --tools to target specific tools regardless of whether they already exist.
@@ -26,6 +27,9 @@ import shutil
 import subprocess
 
 
+TESTS_TEMPLATE_FILE = "tests_template.yml"
+
+
 def get_tool_name(env_path: str) -> str:
     """Extract the tool name from an env YML path.
 
@@ -42,6 +46,25 @@ def render_dockerfile(tool_dir: str, env_filename: str, template_file: str) -> N
     with open(template_file, "rt") as template, open(dockerfile_path, "w") as dockerfile:
         for line in template:
             dockerfile.write(line.replace("<env_desc>", env_filename))
+
+
+def render_tests(tool_dir: str, tool_name: str) -> None:
+    """Render the tests template into the tool directory.
+
+    Skips if tests_template.yml does not exist or if tests.yml already exists
+    in the tool directory (to avoid overwriting manual edits).
+    """
+    if not os.path.exists(TESTS_TEMPLATE_FILE):
+        return
+
+    tests_path = os.path.join(tool_dir, "tests.yml")
+
+    if os.path.exists(tests_path):
+        return
+
+    with open(TESTS_TEMPLATE_FILE, "rt") as template, open(tests_path, "w") as tests:
+        for line in template:
+            tests.write(line.replace("<tool>", tool_name))
 
 
 def generate_lockfile(tool_dir: str, env_path: str) -> None:
@@ -68,6 +91,7 @@ def scaffold_tool(env_path: str, containers_dir: str, template_file: str) -> Non
     os.makedirs(tool_dir, exist_ok=True)
     shutil.copyfile(env_path, dest_env_path)
     render_dockerfile(tool_dir, env_filename, template_file)
+    render_tests(tool_dir, tool)
     generate_lockfile(tool_dir, dest_env_path)
 
 
