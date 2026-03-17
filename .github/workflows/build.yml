@@ -105,4 +105,4 @@ jobs:
           fi
           CMD=$(python3 -c "import yaml; print(yaml.safe_load(open('$TESTS_FILE'))['command'])")
           echo "Running: $CMD"
-          docker run --rm ${{ fromJSON(steps.changes-matrix.outputs.test).image }} $CMD
+          docker run --rm ${{ fromJSON(steps.changes-matrix.outputs.test).image }} bash -c "$CMD"
