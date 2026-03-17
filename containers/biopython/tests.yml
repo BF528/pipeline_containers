@@ -8,4 +8,4 @@
 #   command: python -c "import biopython"
 #   command: bash -c "bowtie2 --version && echo ok"
 
-command: python -c "import biopython"
+command: python -c "import Bio"
