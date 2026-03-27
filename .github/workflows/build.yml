@@ -77,6 +77,8 @@ jobs:
         id: changes-matrix
         run: |
           echo "test={\"dockerfile\":\"containers/${{ matrix.dir }}/Dockerfile\", \"context\":\"containers/${{ matrix.dir }}\", \"image\":\"${{ env.REGISTRY }}/bf528/${{ matrix.dir }}:latest\"}" >> "$GITHUB_OUTPUT"
+          VERSION=$(cat containers/${{ matrix.dir }}/version.txt 2>/dev/null || echo "")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Login to registry
         uses: docker/login-action@v3
@@ -95,6 +97,7 @@ jobs:
           tags: |
             ${{ fromJSON(steps.changes-matrix.outputs.test).image }}
             ${{ env.REGISTRY }}/bf528/${{ matrix.dir }}:${{ github.sha }}
+            ${{ steps.changes-matrix.outputs.version != '' && format('{0}/bf528/{1}:{2}', env.REGISTRY, matrix.dir, steps.changes-matrix.outputs.version) || '' }}
 
       - name: Test container
         run: |
@@ -105,4 +108,4 @@ jobs:
           fi
           CMD=$(python3 -c "import yaml; print(yaml.safe_load(open('$TESTS_FILE'))['command'])")
           echo "Running: $CMD"
-          docker run --rm ${{ fromJSON(steps.changes-matrix.outputs.test).image }} bash -c "$CMD"
+          docker run --rm ${{ fromJSON(steps.changes-matrix.outputs.test).image }} $CMD
