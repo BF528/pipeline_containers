@@ -55,7 +55,8 @@ docker pull ghcr.io/bf528/<tool>:latest
 │       ├── <tool>_env.yml
 │       ├── conda-lock.yml       # Fully resolved lockfile for reproducible builds
 │       ├── Dockerfile
-│       └── tests.yml            # Smoke test command run after build
+│       ├── tests.yml            # Smoke test command run after build
+│       └── version.txt          # Resolved tool version for CI tagging
 ├── envs/                        # Source environment specifications (one per tool)
 │   ├── <tool>_env.yml
 │   └── repo_requirements.yml    # Local dev dependencies
@@ -63,7 +64,8 @@ docker pull ghcr.io/bf528/<tool>:latest
 ├── packages.txt                 # Canonical list of all tools in the repo
 ├── generate_envs.py             # Generates env YMLs from packages.txt
 ├── generate_directory.py        # Scaffolds per-tool directories from envs/
-└── tests_template.yml           # Template for per-tool smoke test configs
+├── tests_template.yml           # Template for per-tool smoke test configs
+└── fetch_versions.py            # Extracts tool versions from lockfiles
 ```
 
 ---
@@ -104,7 +106,7 @@ mamba install -f envs/repo_requirements.yml
 - [x] `generate_directory.py` skips existing tools by default, supports `--overwrite` and `--tools`
 - [x] `tests_template.yml` scaffolds per-tool smoke test configs
 - [x] Container smoke tests run automatically after each build
-- [x] `fetch_versions.py` extracts resolved tool versions from lockfiles and optionally updates the README
+- [x] `fetch_versions.py` extracts resolved tool versions from lockfiles, writes `version.txt`, and optionally updates the README
 - [x] `repo_requirements.yml` for local dev environment setup
 
 ---
@@ -350,6 +352,7 @@ edits are safe.
 |-----|---------|
 | `:latest` | Always points to the most recent build — use this in course materials |
 | `:<sha>` | Pinned to a specific commit — use for debugging or rollback |
+| `:<version>` | Pinned to a specific tool version e.g. `:1.21` — present when `version.txt` exists |
 
 ---
 

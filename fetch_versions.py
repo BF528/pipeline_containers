@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 
 """
-get_versions.py - Extract the primary tool version from each conda-lock lockfile.
+fetch_versions.py - Extract the primary tool version from each conda-lock lockfile.
 
 For each lockfile found under the containers directory, reads the resolved version
 of the tool package (inferred from the directory name) and prints a summary table.
-Optionally updates the version table in the README between pre-existing comment markers.
+
+Optionally writes a version.txt per tool directory for use in CI tagging, and/or
+updates the version table in the README between pre-existing comment markers.
 
 The README must contain the following markers for --update-readme to work:
 
@@ -16,10 +18,12 @@ Place these markers wherever you want the table to appear. The script will repla
 everything between them on each run.
 
 Usage:
-    python get_versions.py
-    python get_versions.py --update-readme
-    python get_versions.py --containers-dir containers --readme README.md
-    python get_versions.py --tools samtools biopython
+    python fetch_versions.py
+    python fetch_versions.py --update-versions
+    python fetch_versions.py --update-readme
+    python fetch_versions.py --update-versions --update-readme
+    python fetch_versions.py --containers-dir containers --readme README.md
+    python fetch_versions.py --tools samtools biopython
 """
 
 import argparse
@@ -57,6 +61,14 @@ def get_tool_version(lockfile_path: str, tool_name: str) -> str | None:
             return package.get("version")
 
     return None
+
+
+def write_version_file(tool_dir: str, version: str) -> None:
+    """Write the resolved version to a version.txt in the tool directory."""
+    version_path = os.path.join(tool_dir, "version.txt")
+    with open(version_path, "wt") as f:
+        f.write(version)
+    print(f"  wrote {version_path}")
 
 
 def build_markdown_table(results: dict[str, str]) -> str:
@@ -121,6 +133,11 @@ def parse_args() -> argparse.Namespace:
         help="Only report versions for the specified tools",
     )
     parser.add_argument(
+        "--update-versions",
+        action="store_true",
+        help="Write resolved version to version.txt in each tool directory",
+    )
+    parser.add_argument(
         "--update-readme",
         action="store_true",
         help="Update the version table in the README between the comment markers",
@@ -155,6 +172,9 @@ def main() -> None:
 
         version = get_tool_version(lockfile_path, tool)
         results[tool] = version if version else "not found in lockfile"
+
+        if args.update_versions and version:
+            write_version_file(tool_dir, version)
 
     col_width = max(len(t) for t in results) + 2
     print(f"\n{'Tool':<{col_width}} Version")
