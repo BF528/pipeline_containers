@@ -23,6 +23,7 @@
 | `pandas` | 3.0.1 |
 | `prokka` | 1.15.6 |
 | `pysam` | 0.23.3 |
+| `rsem` | 1.3.3 |
 | `samtools` | 1.23 |
 | `star` | 2.7.11b |
 | `subread` | 2.1.1 |
