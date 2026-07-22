@@ -6,8 +6,8 @@ RUN micromamba install -y -n base --freeze-installed -f /conda-lock.yml && micro
 
 USER root
 
-# required for nextflow trace
-RUN apt-get update && apt-get install -y procps && rm -rf /var/lib/apt/lists/*
+# procps required for nextflow trace; unzip required to extract datasets download packages
+RUN apt-get update && apt-get install -y procps unzip && rm -rf /var/lib/apt/lists/*
 
 USER $MAMBA_USER
 
