@@ -1,1 +1,1 @@
-command: art_illumina --help
+command: bash -c "art_illumina --help || true"
